@@ -1,0 +1,105 @@
+{
+  "generatedAt": "2026-11-23T17:44:11.957Z",
+  "models": [
+    {
+      "filename": "adn_full.glb",
+      "bytes": 853652,
+      "kb": 833.6,
+      "title": "Modeli i Plotë i ADN-së (22 bp + Bazë Druri)",
+      "category": "complete",
+      "stats": {
+        "basePairs": 22,
+        "turns": 2.1,
+        "atoms": 1309,
+        "bonds": 1472,
+        "heightAngstroms": 74.8,
+        "diameterAngstroms": 20
+      }
+    },
+    {
+      "filename": "adn_helix_only.glb",
+      "bytes": 804908,
+      "kb": 786,
+      "title": "Heliksi i Dyfishtë i B-ADN (Pa Bazë)",
+      "category": "complete",
+      "stats": {
+        "basePairs": 22,
+        "turns": 2.1,
+        "atoms": 1309,
+        "bonds": 1472,
+        "heightAngstroms": 74.8,
+        "diameterAngstroms": 20
+      }
+    },
+    {
+      "filename": "grup_fosfat.glb",
+      "bytes": 45348,
+      "kb": 44.3,
+      "title": "Grupi Fosfat (PO₄³⁻)",
+      "category": "part"
+    },
+    {
+      "filename": "deoksiriboze.glb",
+      "bytes": 68568,
+      "kb": 67,
+      "title": "Sheqeri 2′-Deoksiribozë (C₅H₁₀O₄)",
+      "category": "part"
+    },
+    {
+      "filename": "adenine.glb",
+      "bytes": 69060,
+      "kb": 67.4,
+      "title": "Baza Azotike Adenina (A)",
+      "category": "part"
+    },
+    {
+      "filename": "timine.glb",
+      "bytes": 88792,
+      "kb": 86.7,
+      "title": "Baza Azotike Timina (T)",
+      "category": "part"
+    },
+    {
+      "filename": "guanine.glb",
+      "bytes": 89292,
+      "kb": 87.2,
+      "title": "Baza Azotike Guanina (G)",
+      "category": "part"
+    },
+    {
+      "filename": "citozine.glb",
+      "bytes": 87844,
+      "kb": 85.8,
+      "title": "Baza Azotike Citozina (C)",
+      "category": "part"
+    },
+    {
+      "filename": "nukleotid_A.glb",
+      "bytes": 117368,
+      "kb": 114.6,
+      "title": "Nukleotid i Plotë (dAMP)",
+      "category": "part"
+    },
+    {
+      "filename": "cift_AT.glb",
+      "bytes": 99288,
+      "kb": 97,
+      "title": "Çifti Komplementar A=T (2 Lidhje H)",
+      "category": "part"
+    },
+    {
+      "filename": "cift_GC.glb",
+      "bytes": 99048,
+      "kb": 96.7,
+      "title": "Çifti Komplementar G≡C (3 Lidhje H)",
+      "category": "part"
+    },
+    {
+      "filename": "baza_druri.glb",
+      "bytes": 48908,
+      "kb": 47.8,
+      "title": "Baza e Drurit dhe Boshti i Çelikut",
+      "category": "part"
+    }
+  ]
+}

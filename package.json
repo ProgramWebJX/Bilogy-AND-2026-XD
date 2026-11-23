@@ -1,0 +1,13 @@
+{
+  "name": "biologji-adn-3d",
+  "version": "1.0.0",
+  "description": "Model 3D i ADN-së (B-DNA) me Three.js, eksportim .glb dhe udhërrëfyes interaktiv në shqip",
+  "type": "module",
+  "scripts": {
+    "generate:glb": "node scripts/generate-glbs.mjs",
+    "serve": "node scripts/serve.mjs"
+  },
+  "dependencies": {
+    "three": "^0.170.0"
+  }
+}
