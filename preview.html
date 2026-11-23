@@ -1,0 +1,1307 @@
+<!DOCTYPE html>
+<html lang="sq">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>ADN 3D — Model Molekular &amp; Udhërrëfyes Ndërtimi</title>
+  <link rel="icon" type="image/svg+xml" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Ccircle cx='16' cy='16' r='16' fill='%2311161f'/%3E%3Ctext x='16' y='20' text-anchor='middle' fill='%23ffffff' font-family='sans-serif' font-size='10' font-weight='700'%3EADN%3C/text%3E%3C/svg%3E" />
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500;600&family=Plus+Jakarta+Sans:wght@400;500;600;700&family=Space+Grotesk:wght@500;600;700&display=swap" rel="stylesheet" />
+  <style>
+    :root {
+      --bg-center: #f3f5f8;
+      --bg-edge: #d5dbe3;
+      --surface: rgba(255, 255, 255, 0.84);
+      --surface-solid: #ffffff;
+      --ink: #11161f;
+      --muted: #556072;
+      --border: rgba(17, 22, 31, 0.09);
+      --accent: #1d4ed8;
+      --accent-soft: rgba(29, 78, 216, 0.09);
+      --radius-lg: 16px;
+      --radius-md: 11px;
+      --radius-pill: 999px;
+      --shadow-sm: 0 2px 10px rgba(17, 22, 31, 0.05);
+      --shadow-md: 0 12px 32px rgba(17, 22, 31, 0.08);
+    }
+
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+    }
+
+    html, body {
+      width: 100%;
+      height: 100%;
+      overflow: hidden;
+      font-family: 'Plus Jakarta Sans', -apple-system, BlinkMacSystemFont, sans-serif;
+      color: var(--ink);
+      background: radial-gradient(circle at 56% 44%, var(--bg-center) 0%, #e4e8ee 55%, var(--bg-edge) 100%);
+      -webkit-font-smoothing: antialiased;
+    }
+
+    #canvas-host {
+      position: fixed;
+      inset: 0;
+      width: 100vw;
+      height: 100vh;
+      cursor: grab;
+    }
+
+    #canvas-host:active {
+      cursor: grabbing;
+    }
+
+    /* Top Minimal Header */
+    .topbar {
+      position: fixed;
+      top: 18px;
+      left: 20px;
+      right: 20px;
+      z-index: 20;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 16px;
+      pointer-events: none;
+    }
+
+    .brand {
+      pointer-events: auto;
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      background: var(--surface);
+      backdrop-filter: blur(18px);
+      -webkit-backdrop-filter: blur(18px);
+      border: 1px solid var(--border);
+      border-radius: var(--radius-pill);
+      padding: 8px 18px 8px 12px;
+      box-shadow: var(--shadow-sm);
+    }
+
+    .brand-mark {
+      width: 32px;
+      height: 32px;
+      border-radius: 50%;
+      background: var(--ink);
+      color: #fff;
+      display: grid;
+      place-items: center;
+      font-family: 'Space Grotesk', sans-serif;
+      font-weight: 700;
+      font-size: 12px;
+      letter-spacing: 0.04em;
+    }
+
+    .brand-text h1 {
+      font-family: 'Space Grotesk', sans-serif;
+      font-size: 15px;
+      font-weight: 700;
+      letter-spacing: -0.02em;
+      line-height: 1.15;
+    }
+
+    .brand-text span {
+      display: block;
+      font-size: 11px;
+      color: var(--muted);
+      font-weight: 500;
+    }
+
+    .toolbar {
+      pointer-events: auto;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      flex-wrap: wrap;
+      justify-content: flex-end;
+    }
+
+    .pill-group {
+      display: inline-flex;
+      background: var(--surface);
+      backdrop-filter: blur(18px);
+      -webkit-backdrop-filter: blur(18px);
+      border: 1px solid var(--border);
+      border-radius: var(--radius-pill);
+      padding: 4px;
+      box-shadow: var(--shadow-sm);
+      gap: 2px;
+    }
+
+    .btn {
+      appearance: none;
+      border: 1px solid transparent;
+      background: transparent;
+      color: var(--muted);
+      font-family: inherit;
+      font-size: 12.5px;
+      font-weight: 600;
+      padding: 7px 13px;
+      border-radius: var(--radius-pill);
+      cursor: pointer;
+      transition: all 0.18s ease;
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      white-space: nowrap;
+    }
+
+    .btn:hover {
+      color: var(--ink);
+      background: rgba(17, 22, 31, 0.05);
+    }
+
+    .btn.active {
+      background: var(--ink);
+      color: #ffffff;
+    }
+
+    .btn-surface {
+      background: var(--surface);
+      backdrop-filter: blur(18px);
+      border: 1px solid var(--border);
+      color: var(--ink);
+      box-shadow: var(--shadow-sm);
+    }
+
+    .btn-surface:hover {
+      background: var(--surface-solid);
+    }
+
+    .btn-surface.active {
+      background: var(--ink);
+      color: #fff;
+      border-color: var(--ink);
+    }
+
+    .btn-primary {
+      background: var(--accent);
+      color: #fff;
+      border-color: var(--accent);
+      box-shadow: 0 4px 14px rgba(29, 78, 216, 0.25);
+    }
+
+    .btn-primary:hover {
+      background: #1e40af;
+      color: #fff;
+    }
+
+    /* Left Roadmap Sidebar */
+    .roadmap-panel {
+      position: fixed;
+      top: 78px;
+      left: 20px;
+      bottom: 20px;
+      width: 370px;
+      max-width: calc(100vw - 40px);
+      z-index: 15;
+      background: var(--surface);
+      backdrop-filter: blur(22px);
+      -webkit-backdrop-filter: blur(22px);
+      border: 1px solid var(--border);
+      border-radius: var(--radius-lg);
+      box-shadow: var(--shadow-md);
+      display: flex;
+      flex-direction: column;
+      overflow: hidden;
+      transition: transform 0.28s cubic-bezier(0.22, 1, 0.36, 1), opacity 0.22s ease;
+    }
+
+    .roadmap-panel.collapsed {
+      transform: translateX(calc(-100% - 28px));
+      opacity: 0;
+      pointer-events: none;
+    }
+
+    .roadmap-header {
+      padding: 16px 18px 12px;
+      border-bottom: 1px solid var(--border);
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 10px;
+    }
+
+    .roadmap-header h2 {
+      font-family: 'Space Grotesk', sans-serif;
+      font-size: 14px;
+      font-weight: 700;
+      letter-spacing: -0.01em;
+    }
+
+    .roadmap-header p {
+      font-size: 11.5px;
+      color: var(--muted);
+      margin-top: 2px;
+    }
+
+    .icon-btn {
+      width: 30px;
+      height: 30px;
+      border-radius: 50%;
+      border: 1px solid var(--border);
+      background: rgba(255, 255, 255, 0.7);
+      color: var(--ink);
+      display: grid;
+      place-items: center;
+      cursor: pointer;
+      font-size: 14px;
+      transition: background 0.15s ease;
+    }
+
+    .icon-btn:hover {
+      background: #fff;
+    }
+
+    .roadmap-steps {
+      display: grid;
+      grid-template-columns: repeat(8, 1fr);
+      gap: 4px;
+      padding: 12px 18px;
+      border-bottom: 1px solid var(--border);
+      background: rgba(248, 250, 252, 0.55);
+    }
+
+    .step-chip {
+      height: 30px;
+      border-radius: 8px;
+      border: 1px solid var(--border);
+      background: #fff;
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 11px;
+      font-weight: 600;
+      color: var(--muted);
+      cursor: pointer;
+      transition: all 0.15s ease;
+    }
+
+    .step-chip:hover {
+      border-color: var(--ink);
+      color: var(--ink);
+    }
+
+    .step-chip.active {
+      background: var(--accent);
+      border-color: var(--accent);
+      color: #fff;
+      box-shadow: 0 3px 10px rgba(29, 78, 216, 0.22);
+    }
+
+    .roadmap-body {
+      flex: 1;
+      overflow-y: auto;
+      padding: 18px;
+      display: flex;
+      flex-direction: column;
+      gap: 14px;
+    }
+
+    .roadmap-body::-webkit-scrollbar {
+      width: 5px;
+    }
+    .roadmap-body::-webkit-scrollbar-thumb {
+      background: rgba(17, 22, 31, 0.14);
+      border-radius: 99px;
+    }
+
+    .stage-meta {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 8px;
+    }
+
+    .stage-badge {
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 11px;
+      font-weight: 600;
+      color: var(--accent);
+      background: var(--accent-soft);
+      padding: 4px 9px;
+      border-radius: var(--radius-pill);
+    }
+
+    .formula-pill {
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 11px;
+      color: var(--ink);
+      background: rgba(17, 22, 31, 0.06);
+      padding: 4px 9px;
+      border-radius: var(--radius-pill);
+    }
+
+    .stage-title {
+      font-family: 'Space Grotesk', sans-serif;
+      font-size: 20px;
+      font-weight: 700;
+      letter-spacing: -0.025em;
+      line-height: 1.2;
+    }
+
+    .stage-lead {
+      font-size: 13.5px;
+      line-height: 1.6;
+      color: #293241;
+    }
+
+    .info-card {
+      background: rgba(255, 255, 255, 0.72);
+      border: 1px solid var(--border);
+      border-radius: var(--radius-md);
+      padding: 12px 14px;
+    }
+
+    .info-card h3 {
+      font-family: 'Space Grotesk', sans-serif;
+      font-size: 11.5px;
+      text-transform: uppercase;
+      letter-spacing: 0.06em;
+      color: var(--muted);
+      margin-bottom: 6px;
+    }
+
+    .info-card p, .info-card li {
+      font-size: 12.5px;
+      line-height: 1.55;
+      color: #2c3545;
+    }
+
+    .info-card ul {
+      padding-left: 16px;
+      display: flex;
+      flex-direction: column;
+      gap: 4px;
+    }
+
+    .metrics-grid {
+      display: grid;
+      grid-template-columns: repeat(2, 1fr);
+      gap: 8px;
+    }
+
+    .metric-box {
+      background: rgba(255, 255, 255, 0.72);
+      border: 1px solid var(--border);
+      border-radius: 10px;
+      padding: 9px 11px;
+    }
+
+    .metric-box .k {
+      font-size: 10.5px;
+      color: var(--muted);
+      display: block;
+    }
+
+    .metric-box .v {
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 13px;
+      font-weight: 600;
+      color: var(--ink);
+      margin-top: 2px;
+      display: block;
+    }
+
+    .glb-link {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      text-decoration: none;
+      color: var(--ink);
+      background: #fff;
+      border: 1px solid var(--border);
+      border-radius: var(--radius-md);
+      padding: 10px 13px;
+      font-size: 12.5px;
+      font-weight: 600;
+      transition: all 0.15s ease;
+    }
+
+    .glb-link:hover {
+      border-color: var(--accent);
+      color: var(--accent);
+    }
+
+    .glb-link code {
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 11px;
+      color: var(--muted);
+      font-weight: 500;
+    }
+
+    .roadmap-footer {
+      padding: 12px 18px;
+      border-top: 1px solid var(--border);
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 8px;
+      background: rgba(255, 255, 255, 0.65);
+    }
+
+    /* Floating reopen button when roadmap is collapsed */
+    .roadmap-reopen {
+      position: fixed;
+      top: 78px;
+      left: 20px;
+      z-index: 14;
+      display: none;
+    }
+
+    .roadmap-reopen.visible {
+      display: inline-flex;
+    }
+
+    /* Bottom-right Legend + Inspector */
+    .bottom-right {
+      position: fixed;
+      right: 20px;
+      bottom: 20px;
+      z-index: 15;
+      display: flex;
+      flex-direction: column;
+      align-items: flex-end;
+      gap: 10px;
+      pointer-events: none;
+      max-width: 330px;
+    }
+
+    .inspector-card {
+      pointer-events: auto;
+      width: 100%;
+      background: var(--surface);
+      backdrop-filter: blur(20px);
+      -webkit-backdrop-filter: blur(20px);
+      border: 1px solid var(--border);
+      border-radius: var(--radius-lg);
+      padding: 14px 16px;
+      box-shadow: var(--shadow-md);
+      display: none;
+    }
+
+    .inspector-card.visible {
+      display: block;
+    }
+
+    .inspector-top {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 8px;
+      margin-bottom: 6px;
+    }
+
+    .inspector-title {
+      font-family: 'Space Grotesk', sans-serif;
+      font-size: 14px;
+      font-weight: 700;
+    }
+
+    .inspector-desc {
+      font-size: 12px;
+      line-height: 1.5;
+      color: var(--muted);
+    }
+
+    .inspector-tags {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 6px;
+      margin-top: 8px;
+    }
+
+    .legend-pill {
+      pointer-events: auto;
+      background: var(--surface);
+      backdrop-filter: blur(18px);
+      -webkit-backdrop-filter: blur(18px);
+      border: 1px solid var(--border);
+      border-radius: var(--radius-pill);
+      padding: 8px 14px;
+      box-shadow: var(--shadow-sm);
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      flex-wrap: wrap;
+      justify-content: flex-end;
+    }
+
+    .legend-item {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      font-size: 11.5px;
+      font-weight: 600;
+      color: var(--ink);
+    }
+
+    .dot {
+      width: 10px;
+      height: 10px;
+      border-radius: 50%;
+      border: 1px solid rgba(17, 22, 31, 0.18);
+      flex-shrink: 0;
+    }
+
+    .hint-bar {
+      position: fixed;
+      bottom: 20px;
+      left: 50%;
+      transform: translateX(-50%);
+      z-index: 12;
+      font-size: 11.5px;
+      color: var(--muted);
+      background: rgba(255, 255, 255, 0.66);
+      backdrop-filter: blur(12px);
+      border: 1px solid var(--border);
+      border-radius: var(--radius-pill);
+      padding: 6px 14px;
+      pointer-events: none;
+    }
+
+    .toast {
+      position: fixed;
+      top: 76px;
+      right: 20px;
+      z-index: 30;
+      background: var(--ink);
+      color: #fff;
+      font-size: 12.5px;
+      font-weight: 500;
+      padding: 10px 16px;
+      border-radius: var(--radius-pill);
+      box-shadow: var(--shadow-md);
+      opacity: 0;
+      transform: translateY(-8px);
+      transition: all 0.22s ease;
+      pointer-events: none;
+    }
+
+    .toast.show {
+      opacity: 1;
+      transform: translateY(0);
+    }
+
+    @media (max-width: 900px) {
+      .roadmap-panel {
+        top: auto;
+        height: 46vh;
+        width: calc(100vw - 24px);
+        left: 12px;
+        bottom: 12px;
+      }
+      .hint-bar {
+        display: none;
+      }
+      .bottom-right {
+        bottom: auto;
+        top: 74px;
+        right: 12px;
+      }
+    }
+  </style>
+
+  <script type="importmap">
+    {
+      "imports": {
+        "three": "./node_modules/three/build/three.module.js",
+        "three/addons/": "./node_modules/three/examples/jsm/"
+      }
+    }
+  </script>
+</head>
+<body>
+  <div id="canvas-host" aria-label="Skena 3D interaktive e ADN-së"></div>
+
+  <!-- Header -->
+  <header class="topbar">
+    <div class="brand">
+      <div class="brand-mark">ADN</div>
+      <div class="brand-text">
+        <h1>Modeli Molekular 3D i ADN-së</h1>
+        <span>B-ADN · 22 Çifte Bazash · WebGL &amp; .GLB</span>
+      </div>
+    </div>
+
+    <div class="toolbar">
+      <div class="pill-group" role="group" aria-label="Mënyra e ngjyrosjes">
+        <button id="btn-cpk" class="btn active" type="button">CPK Atomike</button>
+        <button id="btn-edu" class="btn" type="button">Ngjyra A/T/G/C</button>
+      </div>
+      <button id="btn-stand" class="btn btn-surface active" type="button">Baza Druri</button>
+      <button id="btn-explode" class="btn btn-surface" type="button">Shpërthim</button>
+      <button id="btn-rotate" class="btn btn-surface active" type="button">Rrotullim</button>
+      <button id="btn-export" class="btn btn-primary" type="button">Eksporto .GLB</button>
+    </div>
+  </header>
+
+  <!-- Reopen Roadmap Button -->
+  <button id="btn-reopen" class="btn btn-surface roadmap-reopen" type="button">
+    Udhërrëfyesi 3D (8 Hapa)
+  </button>
+
+  <!-- Left 8-Step Interactive Roadmap Panel -->
+  <aside id="roadmap-panel" class="roadmap-panel" aria-label="Udhërrëfyesi 3D i ADN-së">
+    <div class="roadmap-header">
+      <div>
+        <h2>Udhërrëfyesi 3D i Krijimit të ADN-së</h2>
+        <p>Ndiqni 8 fazat nga atomet tek heliksi i dyfishtë</p>
+      </div>
+      <button id="btn-collapse" class="icon-btn" type="button" title="Fshih panelin">×</button>
+    </div>
+
+    <div id="step-chips" class="roadmap-steps" role="tablist" aria-label="Fazat e ndërtimit"></div>
+
+    <div id="roadmap-body" class="roadmap-body"></div>
+
+    <div class="roadmap-footer">
+      <button id="btn-prev" class="btn btn-surface" type="button">← Prapa</button>
+      <span id="step-counter" class="formula-pill">8 / 8</span>
+      <button id="btn-next" class="btn btn-surface" type="button">Tjetra →</button>
+    </div>
+  </aside>
+
+  <!-- Center Hint -->
+  <div class="hint-bar">Zvarrit për rrotullim · Rrota e mausit për zmadhim · Kliko çdo atom për detaje</div>
+
+  <!-- Bottom Right Inspector & Legend -->
+  <div class="bottom-right">
+    <div id="inspector-card" class="inspector-card" role="status">
+      <div class="inspector-top">
+        <span id="insp-title" class="inspector-title"></span>
+        <button id="insp-close" class="icon-btn" type="button" style="width:24px;height:24px;font-size:12px;">×</button>
+      </div>
+      <p id="insp-desc" class="inspector-desc"></p>
+      <div id="insp-tags" class="inspector-tags"></div>
+    </div>
+
+    <div id="legend-pill" class="legend-pill" aria-label="Legjenda e ngjyrave"></div>
+  </div>
+
+  <div id="toast" class="toast" role="alert"></div>
+
+  <script type="module">
+    import * as THREE from 'three';
+    import { OrbitControls } from 'three/addons/controls/OrbitControls.js';
+    import { RoomEnvironment } from 'three/addons/environments/RoomEnvironment.js';
+    import { GLTFExporter } from 'three/addons/exporters/GLTFExporter.js';
+    import {
+      buildFullDNA,
+      buildPhosphateGroup,
+      buildDeoxyribose,
+      buildBase,
+      buildBasePair,
+      buildNucleotide,
+      ELEMENT_INFO_SQ,
+      PART_INFO_SQ,
+    } from './src/dnaBuilder.js';
+
+    // =========================================================================
+    // 1. TË DHËNAT E UDHËRRËFYESIT 8-FAZOR NË SHQIP
+    // =========================================================================
+    const ROADMAP_STAGES = [
+      {
+        id: 1,
+        code: 'FAZA 01',
+        title: 'Atomet Themelore (Kodi CPK)',
+        formula: 'C · O · N · H · P',
+        glbFile: 'models/nukleotid_A.glb',
+        glbLabel: 'Shkarko nukleotid_A.glb',
+        lead: 'Çdo molekulë e ADN-së përbëhet vetëm nga 5 elemente kimike. Në modelin fizik laboratorik (Indigo Instruments), çdo atom paraqitet me ngjyrën standarde CPK dhe madhësi proporcionale me rrezen atomike.',
+        biology: [
+          'Karboni (E zezë): formon skeletin e unazave të sheqerit dhe bazave azotike.',
+          'Oksigjeni (E kuqe): ndërton grupet fosfat, unazën pentozë dhe lidhjet karbonil.',
+          'Azoti (Blu): jep vetitë bazike të unazave A, T, G, C dhe formon lidhjet hidrogjenore.',
+          'Hidrogjeni (E bardhë): realizon urat hidrogjenore që mbajnë dy zinxhirët bashkë.',
+          'Fosfori (Vjollcë): qendra e lidhjes fosfodiesterike 5′→3′.',
+        ],
+        modeling: 'Në Three.js, çdo element gjenerohet me SphereGeometry të ndarë sipas rrezes Van der Waals dhe materiale MeshStandardMaterial me shkëlqim të ulët (roughness 0.22) për pamje realiste plastike-molekulare.',
+        metrics: [
+          ['Elemente kimike', '5 (C, O, N, H, P)'],
+          ['Lidhje kovalente', 'Cilindra 3D'],
+        ],
+        camera: { pos: [3.2, 1.5, 4.8], target: [0.4, 0.2, 0] },
+      },
+      {
+        id: 2,
+        code: 'FAZA 02',
+        title: 'Grupi Fosfat',
+        formula: 'PO₄³⁻',
+        glbFile: 'models/grup_fosfat.glb',
+        glbLabel: 'Shkarko grup_fosfat.glb',
+        lead: 'Grupi fosfat është nyja lidhëse e skeletit të jashtëm të ADN-së. Ai ka ngarkesë elektrike negative, duke e bërë sipërfaqen e jashtme të ADN-së hidrofile (të tretshme në ujë).',
+        biology: [
+          'Përbëhet nga 1 atom Fosfori (vjollcë) në qendër i lidhur me 4 atome Oksigjeni (të kuqe).',
+          'Krijon lidhje kovalente fosfodiesterike midis karbonit 3′ të një sheqeri dhe karbonit 5′ të sheqerit pasardhës.',
+          'Ngarkesa negative neutralizohet në qelizë nga jonet Mg²⁺ dhe proteinat histone.',
+        ],
+        modeling: 'Ndërtohet si tetraedër i rregullt 3D me koordinata simetrike të oksigjeneve OP1, OP2 (drejt jashtë) dhe O3′, O5′ (drejt shtyllës).',
+        metrics: [
+          ['Gjeometria', 'Tetraedrike (109.5°)'],
+          ['Atome / Grup', '5 (1 P + 4 O)'],
+        ],
+        camera: { pos: [2.4, 1.3, 3.0], target: [0, 0, 0] },
+      },
+      {
+        id: 3,
+        code: 'FAZA 03',
+        title: 'Sheqeri 2′-Deoksiribozë',
+        formula: 'C₅H₁₀O₄',
+        glbFile: 'models/deoksiriboze.glb',
+        glbLabel: 'Shkarko deoksiriboze.glb',
+        lead: '2′-Deoksiriboza është një sheqer pentozë me 5 atome karboni. Emri "deoksi" vjen nga mungesa e një atomi oksigjeni në karbonin C2′, gjë që e bën ADN-në shumë më të qëndrueshme kimikisht sesa ARN-ja.',
+        biology: [
+          'Karboni C1′ lidhet me bazën azotike përmes lidhjes β-N-glikozidike.',
+          'Karboni C2′ ka dy atome hidrogjeni (jo grup -OH), duke parandaluar hidrolizën spontane.',
+          'Karbonet C3′ dhe C5′ përcaktojnë drejtimin polar të zinxhirit (5′ → 3′).',
+        ],
+        modeling: 'Modeluar me konformacionin real "C2′-endo" (unazë pesëkëndëshe lehtësisht e përkulur), çka lejon ngritjen ekzakte 3.4 Å midis çifteve në B-ADN.',
+        metrics: [
+          ['Konformacioni', 'C2′-endo (B-ADN)'],
+          ['Unaza', 'Pentozë furanozike'],
+        ],
+        camera: { pos: [2.6, 1.4, 3.3], target: [0.1, 0, 0] },
+      },
+      {
+        id: 4,
+        code: 'FAZA 04',
+        title: 'Nukleotidi i Plotë',
+        formula: 'Fosfat + Sheqer + Bazë',
+        glbFile: 'models/nukleotid_A.glb',
+        glbLabel: 'Shkarko nukleotid_A.glb',
+        lead: 'Nukleotidi është njësia themelore ndërtuese (monomeri) e ADN-së. Kur bashkohen grupi fosfat, 2′-deoksiriboza dhe një bazë azotike (këtu Adenina → dAMP), formohet blloku që përsëritet miliona herë në gjenom.',
+        biology: [
+          'Lidhja esterike bashkon fosfatin me karbonin C5′ të sheqerit.',
+          'Lidhja β-N-glikozidike bashkon karbonin C1′ me azotin N9 (për purinat) ose N1 (për pirimidinat).',
+          'Polimerizimi ndodh gjithmonë duke shtuar nukleotide të reja në skajin e lirë 3′-OH.',
+        ],
+        modeling: 'Kombinon tre grupet modulare (buildBase + buildDeoxyribose + buildPhosphateGroup) të lidhura me cilindra kovalentë në një grup të vetëm Three.js të eksportueshëm në .glb.',
+        metrics: [
+          ['Njësia', 'Deoksiadenozinë monofosfat'],
+          ['Komponentë', '3 module atomike'],
+        ],
+        camera: { pos: [3.6, 1.8, 5.2], target: [0.5, 0.3, 0] },
+      },
+      {
+        id: 5,
+        code: 'FAZA 05',
+        title: 'Bazat Azotike (Purina & Pirimidina)',
+        formula: 'A · G (2 unaza) | T · C (1 unazë)',
+        glbFile: 'models/adenine.glb',
+        glbLabel: 'Shkarko adenine.glb',
+        lead: 'Informacioni gjenetik kodohet në renditjen e 4 bazave azotike: dy Purina me nga dy unaza (Adenina A, Guanina G) dhe dy Pirimidina me nga një unazë (Timina T, Citozina C).',
+        biology: [
+          'Adenina (A) & Guanina (G): purina me dy unaza aromatike të bashkuara.',
+          'Timina (T): pirimidinë me një unazë dhe grup karakteristik metil (-CH₃) që e dallon ADN-në nga ARN.',
+          'Citozina (C): pirimidinë me grup amino (-NH₂) dhe karbonil (=O).',
+        ],
+        modeling: 'Këtu shfaqen të 4 bazat krah për krah (nga e majta në të djathtë: A, T, G, C) me koordinata planare aromatike në planin horizontal XZ.',
+        metrics: [
+          ['Purina (2 unaza)', 'Adeninë (A), Guaninë (G)'],
+          ['Pirimidina (1 unazë)', 'Timinë (T), Citozinë (C)'],
+        ],
+        camera: { pos: [0, 4.8, 7.6], target: [0, 0, 0] },
+      },
+      {
+        id: 6,
+        code: 'FAZA 06',
+        title: 'Çiftëzimi Komplementar & Lidhjet H',
+        formula: 'A = T (2 H)  ·  G ≡ C (3 H)',
+        glbFile: 'models/cift_GC.glb',
+        glbLabel: 'Shkarko cift_GC.glb',
+        lead: 'Sipas rregullit të Chargaff-it, një purinë lidhet gjithmonë me një pirimidinë komplementare. Kjo ruan një diametër krejtësisht të njëtrajtshëm prej 20 Å përgjatë gjithë heliksit.',
+        biology: [
+          'A = T (sipër): lidhen me 2 lidhje hidrogjenore — hapen më lehtë gjatë replikimit.',
+          'G ≡ C (poshtë): lidhen me 3 lidhje hidrogjenore — rrisin stabilitetin termik të ADN-së.',
+          'Lidhjet hidrogjenore janë mjaftueshëm të forta për të ruajtur strukturën, por të hapshme nga enzima Helikazë.',
+        ],
+        modeling: 'Lidhjet hidrogjenore paraqiten me shufra të holla gjysmë-transparente (2 për A=T, 3 për G≡C) që lidhin dhuruesit (-NH) me pranuesit (=O, -N=) midis bazave.',
+        metrics: [
+          ['Lidhje A = T', '2 lidhje hidrogjenore'],
+          ['Lidhje G ≡ C', '3 lidhje hidrogjenore'],
+        ],
+        camera: { pos: [0, 3.8, 6.4], target: [0, 0, 0] },
+      },
+      {
+        id: 7,
+        code: 'FAZA 07',
+        title: 'Heliksi Antiparalel & Hullitë e B-ADN',
+        formula: '5′→3′ || 3′←5′ · 34.3°/bp',
+        glbFile: 'models/adn_helix_only.glb',
+        glbLabel: 'Shkarko adn_helix_only.glb',
+        lead: 'Dy shtyllat fosfat-sheqer ecin në drejtime të kundërta (antiparalele) dhe rrotullohen djathtas me 34.3° për çdo çift bazash. Këndi asimetrik (~142°) krijon Hullinë e Madhe dhe Hullinë e Vogël.',
+        biology: [
+          'Hullia e Madhe (~12 Å): e gjerë dhe e thellë — lejon proteinat rregullatore të lexojnë sekuencën pa hapur ADN-në.',
+          'Hullia e Vogël (~6 Å): e ngushtë — stabilizon formën B-ADN përmes shtresës së ujit.',
+          'Çdo 10.5 çifte bazash plotësojnë një rrotullim 360° me lartësi (pitch) 34 Å.',
+        ],
+        modeling: 'Gjeometria gjenerohet në cikël 22-nivelësh: y = idx × 3.4 Å, θ = idx × 34.3°, ndërsa zinxhiri B vendoset në θ + 142° i rrotulluar me 180° (antiparalel).',
+        metrics: [
+          ['Ngritja / Çift', '3.4 Å (0.34 nm)'],
+          ['Diametri i Heliksit', '20.0 Å (2.0 nm)'],
+        ],
+        camera: { pos: [-1.4, 6.2, 22.0], target: [-1.4, 6.2, 0] },
+      },
+      {
+        id: 8,
+        code: 'FAZA 08',
+        title: 'Modeli i Plotë Fizik (22 Çifte Bazash)',
+        formula: '22 bp · ~2.1 Rrotullime · .GLB',
+        glbFile: 'models/adn_full.glb',
+        glbLabel: 'Shkarko adn_full.glb (834 KB)',
+        lead: 'Ky është modeli i plotë 3D i ndërtuar sipas fotos suaj laboratorike Indigo Instruments: 22 çifte bazash (rreth 2.1 rrotullime të plota), me pllaka stabilizuese akrilike, bosht qendror çeliku dhe bazë rrethore druri lisi.',
+        biology: [
+          'Përfshin 22 çifte bazash komplementare me të gjitha atomet C, O, N, H, P.',
+          'Provoni "Ngjyra A/T/G/C" lart për të dalluar menjëherë bazat, sheqerin dhe fosfatet.',
+          'Aktivizoni "Shpërthim" (Exploded View) për të parë qartë shtyllat dhe lidhjet hidrogjenore.',
+        ],
+        modeling: 'Eksportuar me Three.js GLTFExporter në formatin binar .glb me të gjitha materialet PBR dhe gjeometrinë e optimizuar për WebGL dhe printim/shikim 3D.',
+        metrics: [
+          ['Çifte Bazash', '22 bp (~74.8 Å)'],
+          ['Rrotullime', '2.10 kthesa të plota'],
+        ],
+        camera: { pos: [-1.5, 6.0, 23.2], target: [-1.5, 5.7, 0] },
+      },
+    ];
+
+    // =========================================================================
+    // 2. SKENA WEBGL & STUDIO LIGHTING (THREE.JS)
+    // =========================================================================
+    const host = document.getElementById('canvas-host');
+    const scene = new THREE.Scene();
+
+    const camera = new THREE.PerspectiveCamera(38, window.innerWidth / window.innerHeight, 0.1, 200);
+    camera.position.set(-1.5, 6.0, 23.2);
+
+    const renderer = new THREE.WebGLRenderer({ antialias: true, alpha: true, powerPreference: 'high-performance' });
+    renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
+    renderer.setSize(window.innerWidth, window.innerHeight);
+    renderer.toneMapping = THREE.ACESFilmicToneMapping;
+    renderer.toneMappingExposure = 1.06;
+    renderer.shadowMap.enabled = true;
+    renderer.shadowMap.type = THREE.PCFSoftShadowMap;
+    host.appendChild(renderer.domElement);
+
+    // Mjedisi reflektues për shkëlqimin e sferave CPK & çelikut
+    const pmrem = new THREE.PMREMGenerator(renderer);
+    scene.environment = pmrem.fromScene(new RoomEnvironment(), 0.04).texture;
+    scene.environmentIntensity = 0.65;
+
+    // Ndriçimi 3-pikësh i studios
+    const hemiLight = new THREE.HemisphereLight(0xffffff, 0xcbd5e1, 0.9);
+    scene.add(hemiLight);
+
+    const keyLight = new THREE.DirectionalLight(0xffffff, 1.45);
+    keyLight.position.set(10, 18, 14);
+    keyLight.castShadow = true;
+    keyLight.shadow.mapSize.set(2048, 2048);
+    keyLight.shadow.camera.near = 2;
+    keyLight.shadow.camera.far = 45;
+    keyLight.shadow.camera.left = -10;
+    keyLight.shadow.camera.right = 10;
+    keyLight.shadow.camera.top = 18;
+    keyLight.shadow.camera.bottom = -4;
+    keyLight.shadow.bias = -0.0005;
+    scene.add(keyLight);
+
+    const rimLight = new THREE.DirectionalLight(0xe0ecff, 0.65);
+    rimLight.position.set(-12, 10, -10);
+    scene.add(rimLight);
+
+    // Dysheme e padukshme që kap vetëm hijen e butë të bazës së drurit
+    const shadowFloor = new THREE.Mesh(
+      new THREE.PlaneGeometry(40, 40),
+      new THREE.ShadowMaterial({ opacity: 0.14 })
+    );
+    shadowFloor.rotation.x = -Math.PI / 2;
+    shadowFloor.position.y = -0.86;
+    shadowFloor.receiveShadow = true;
+    scene.add(shadowFloor);
+
+    const controls = new OrbitControls(camera, renderer.domElement);
+    controls.enableDamping = true;
+    controls.dampingFactor = 0.06;
+    controls.maxDistance = 42;
+    controls.minDistance = 1.5;
+    controls.target.set(-1.5, 5.7, 0);
+
+    // =========================================================================
+    // 3. GJENDJA E APLIKACIONIT & NDËRTIMI I FAZAVE 3D
+    // =========================================================================
+    const state = {
+      stageIndex: 7, // Fillon tek Faza 08: Modeli i plotë fizik (si në foton e referencës!)
+      colorMode: 'cpk',
+      showStand: true,
+      exploded: false,
+      autoRotate: true,
+      currentRoot: null,
+      fullDnaData: null,
+    };
+
+    const stageContainer = new THREE.Group();
+    scene.add(stageContainer);
+
+    let camAnim = null;
+
+    function animateCameraTo(posArr, targetArr) {
+      camAnim = {
+        startPos: camera.position.clone(),
+        endPos: new THREE.Vector3(...posArr),
+        startTarget: controls.target.clone(),
+        endTarget: new THREE.Vector3(...targetArr),
+        t: 0,
+      };
+    }
+
+    function clearStage() {
+      while (stageContainer.children.length > 0) {
+        stageContainer.remove(stageContainer.children[0]);
+      }
+      state.currentRoot = null;
+      state.fullDnaData = null;
+    }
+
+    function buildStageScene(stageIdx) {
+      clearStage();
+      const opts = { colorMode: state.colorMode, detail: 'high' };
+      const stage = ROADMAP_STAGES[stageIdx];
+      let root = new THREE.Group();
+      root.name = `ADN_Faza_${stage.id}`;
+
+      shadowFloor.visible = stage.id === 8 && state.showStand;
+
+      if (stage.id === 1 || stage.id === 4) {
+        const nuc = buildNucleotide('A', opts);
+        nuc.scale.setScalar(0.45);
+        nuc.position.set(-0.6, 0, 0);
+        root.add(nuc);
+      } else if (stage.id === 2) {
+        const phos = buildPhosphateGroup(opts);
+        phos.scale.setScalar(0.8);
+        root.add(phos);
+      } else if (stage.id === 3) {
+        const sugar = buildDeoxyribose(opts);
+        sugar.scale.setScalar(0.75);
+        root.add(sugar);
+      } else if (stage.id === 5) {
+        // Të 4 bazat krah për krah: A, T, G, C
+        const types = ['A', 'T', 'G', 'C'];
+        types.forEach((t, i) => {
+          const b = buildBase(t, opts);
+          b.rotation.x = Math.PI / 2;
+          b.scale.setScalar(0.36);
+          b.position.set((i - 1.5) * 2.55, 0, 0);
+          root.add(b);
+        });
+      } else if (stage.id === 6) {
+        // A=T sipër dhe G≡C poshtë për krahasim direkt të 2 vs 3 lidhjeve hidrogjenore
+        const at = buildBasePair('A', opts);
+        at.scale.setScalar(0.38);
+        at.position.set(0, 0.95, 0);
+        root.add(at);
+
+        const gc = buildBasePair('G', opts);
+        gc.scale.setScalar(0.38);
+        gc.position.set(0, -0.95, 0);
+        root.add(gc);
+      } else if (stage.id === 7 || stage.id === 8) {
+        const includeStand = stage.id === 8 ? state.showStand : false;
+        const dna = buildFullDNA({
+          colorMode: state.colorMode,
+          includeStand,
+          detail: 'standard',
+          scale: 0.16,
+        });
+        root = dna.group;
+        state.fullDnaData = dna;
+        applyExplodedState();
+      }
+
+      stageContainer.add(root);
+      state.currentRoot = root;
+
+      // Përditëso metrikën reale të atomeve në Fazën 8
+      if (state.fullDnaData && stage.id === 8) {
+        stage.metrics[1] = ['Atome / Lidhje 3D', `${state.fullDnaData.stats.atoms} / ${state.fullDnaData.stats.bonds}`];
+      }
+    }
+
+    function applyExplodedState() {
+      if (!state.fullDnaData) return;
+      const factor = state.exploded ? 1.38 : 1.0;
+      const radialPush = state.exploded ? 2.4 : 0.0;
+      for (const bp of state.fullDnaData.bpGroups) {
+        bp.group.position.y = bp.baseY * factor;
+        bp.phosA.position.x = Math.cos(-0.26) * (9.4 + radialPush);
+        bp.phosA.position.z = Math.sin(-0.26) * (9.4 + radialPush);
+        const angB = (142 * Math.PI) / 180;
+        bp.phosB.position.x = Math.cos(angB + 0.26) * (9.4 + radialPush);
+        bp.phosB.position.z = Math.sin(angB + 0.26) * (9.4 + radialPush);
+      }
+      if (state.fullDnaData.backboneBondsGroup) {
+        state.fullDnaData.backboneBondsGroup.visible = !state.exploded;
+      }
+    }
+
+    // =========================================================================
+    // 4. UI: ROADMAP PANEL, LEGJENDA & INSPEKTORI 3D
+    // =========================================================================
+    const stepChipsEl = document.getElementById('step-chips');
+    const roadmapBodyEl = document.getElementById('roadmap-body');
+    const stepCounterEl = document.getElementById('step-counter');
+    const legendPillEl = document.getElementById('legend-pill');
+    const inspectorCard = document.getElementById('inspector-card');
+    const inspTitle = document.getElementById('insp-title');
+    const inspDesc = document.getElementById('insp-desc');
+    const inspTags = document.getElementById('insp-tags');
+    const toastEl = document.getElementById('toast');
+
+    let toastTimer = null;
+    function showToast(msg) {
+      toastEl.textContent = msg;
+      toastEl.classList.add('show');
+      clearTimeout(toastTimer);
+      toastTimer = setTimeout(() => toastEl.classList.remove('show'), 2800);
+    }
+
+    function renderLegend() {
+      const items = state.colorMode === 'cpk'
+        ? [
+            ['#1b1e23', 'C · Karbon'],
+            ['#d92626', 'O · Oksigjen'],
+            ['#1d70d8', 'N · Azot'],
+            ['#f4f6f9', 'H · Hidrogjen'],
+            ['#7e3af2', 'P · Fosfor'],
+          ]
+        : [
+            ['#2563eb', 'Adeninë (A)'],
+            ['#ea580c', 'Timinë (T)'],
+            ['#16a34a', 'Guaninë (G)'],
+            ['#eab308', 'Citozinë (C)'],
+            ['#dc2626', 'Deoksiribozë'],
+            ['#7c3aed', 'Fosfat'],
+          ];
+
+      legendPillEl.innerHTML = items
+        .map(([hex, label]) => `<span class="legend-item"><span class="dot" style="background:${hex}"></span>${label}</span>`)
+        .join('');
+    }
+
+    function renderRoadmapUI() {
+      const stage = ROADMAP_STAGES[state.stageIndex];
+
+      stepChipsEl.innerHTML = ROADMAP_STAGES.map(
+        (s, idx) =>
+          `<button type="button" class="step-chip ${idx === state.stageIndex ? 'active' : ''}" data-idx="${idx}" title="${s.title}">0${s.id}</button>`
+      ).join('');
+
+      stepChipsEl.querySelectorAll('.step-chip').forEach((btn) => {
+        btn.addEventListener('click', () => selectStage(Number(btn.dataset.idx)));
+      });
+
+      stepCounterEl.textContent = `${stage.id} / ${ROADMAP_STAGES.length}`;
+      document.getElementById('btn-prev').disabled = state.stageIndex === 0;
+      document.getElementById('btn-next').disabled = state.stageIndex === ROADMAP_STAGES.length - 1;
+
+      roadmapBodyEl.innerHTML = `
+        <div class="stage-meta">
+          <span class="stage-badge">${stage.code}</span>
+          <span class="formula-pill">${stage.formula}</span>
+        </div>
+        <h2 class="stage-title">${stage.title}</h2>
+        <p class="stage-lead">${stage.lead}</p>
+
+        <div class="metrics-grid">
+          ${stage.metrics.map(([k, v]) => `<div class="metric-box"><span class="k">${k}</span><span class="v">${v}</span></div>`).join('')}
+        </div>
+
+        <div class="info-card">
+          <h3>Roli Biologjik &amp; Përbërja</h3>
+          <ul>${stage.biology.map((item) => `<li>${item}</li>`).join('')}</ul>
+        </div>
+
+        <div class="info-card">
+          <h3>Ndërtimi 3D në Three.js</h3>
+          <p>${stage.modeling}</p>
+        </div>
+
+        <a class="glb-link" href="${stage.glbFile}" download>
+          <span>⬇ ${stage.glbLabel}</span>
+          <code>.GLB</code>
+        </a>
+      `;
+    }
+
+    function selectStage(idx, moveCam = true) {
+      state.stageIndex = Math.max(0, Math.min(ROADMAP_STAGES.length - 1, idx));
+      buildStageScene(state.stageIndex);
+      renderRoadmapUI();
+      if (moveCam) {
+        const cam = ROADMAP_STAGES[state.stageIndex].camera;
+        animateCameraTo(cam.pos, cam.target);
+      }
+    }
+
+    // =========================================================================
+    // 5. KONTROLLET E TOOLBAR-IT & EKSPORTIMI LIVE .GLB
+    // =========================================================================
+    document.getElementById('btn-cpk').addEventListener('click', () => {
+      state.colorMode = 'cpk';
+      document.getElementById('btn-cpk').classList.add('active');
+      document.getElementById('btn-edu').classList.remove('active');
+      buildStageScene(state.stageIndex);
+      renderLegend();
+    });
+
+    document.getElementById('btn-edu').addEventListener('click', () => {
+      state.colorMode = 'educational';
+      document.getElementById('btn-edu').classList.add('active');
+      document.getElementById('btn-cpk').classList.remove('active');
+      buildStageScene(state.stageIndex);
+      renderLegend();
+    });
+
+    document.getElementById('btn-stand').addEventListener('click', (e) => {
+      state.showStand = !state.showStand;
+      e.currentTarget.classList.toggle('active', state.showStand);
+      if (state.stageIndex === 7) buildStageScene(7);
+    });
+
+    document.getElementById('btn-explode').addEventListener('click', (e) => {
+      state.exploded = !state.exploded;
+      e.currentTarget.classList.toggle('active', state.exploded);
+      if (state.stageIndex < 6) {
+        selectStage(7);
+      } else {
+        applyExplodedState();
+      }
+    });
+
+    document.getElementById('btn-rotate').addEventListener('click', (e) => {
+      state.autoRotate = !state.autoRotate;
+      e.currentTarget.classList.toggle('active', state.autoRotate);
+    });
+
+    document.getElementById('btn-prev').addEventListener('click', () => selectStage(state.stageIndex - 1));
+    document.getElementById('btn-next').addEventListener('click', () => selectStage(state.stageIndex + 1));
+
+    const panelEl = document.getElementById('roadmap-panel');
+    const reopenBtn = document.getElementById('btn-reopen');
+    document.getElementById('btn-collapse').addEventListener('click', () => {
+      panelEl.classList.add('collapsed');
+      reopenBtn.classList.add('visible');
+    });
+    reopenBtn.addEventListener('click', () => {
+      panelEl.classList.remove('collapsed');
+      reopenBtn.classList.remove('visible');
+    });
+
+    document.getElementById('insp-close').addEventListener('click', () => {
+      inspectorCard.classList.remove('visible');
+    });
+
+    // Eksportimi live në .GLB i pamjes aktuale 3D
+    document.getElementById('btn-export').addEventListener('click', () => {
+      if (!state.currentRoot) return;
+      const exporter = new GLTFExporter();
+      const stage = ROADMAP_STAGES[state.stageIndex];
+      showToast('Duke gjeneruar skedarin .GLB...');
+      exporter.parse(
+        state.currentRoot,
+        (result) => {
+          const blob = new Blob([result], { type: 'model/gltf-binary' });
+          const url = URL.createObjectURL(blob);
+          const a = document.createElement('a');
+          a.href = url;
+          a.download = `adn_faza_${stage.id}_${state.colorMode}.glb`;
+          a.click();
+          URL.revokeObjectURL(url);
+          showToast(`U eksportua adn_faza_${stage.id}_${state.colorMode}.glb`);
+        },
+        (err) => {
+          console.error(err);
+          showToast('Gabim gjatë eksportimit .GLB');
+        },
+        { binary: true }
+      );
+    });
+
+    // =========================================================================
+    // 6. KLIKIMI MBI ATOME / PJESË (RAYCASTER INSPECTOR)
+    // =========================================================================
+    const raycaster = new THREE.Raycaster();
+    const pointer = new THREE.Vector2();
+    let pointerDownPos = { x: 0, y: 0 };
+
+    renderer.domElement.addEventListener('pointerdown', (e) => {
+      pointerDownPos = { x: e.clientX, y: e.clientY };
+    });
+
+    renderer.domElement.addEventListener('pointerup', (e) => {
+      const dist = Math.hypot(e.clientX - pointerDownPos.x, e.clientY - pointerDownPos.y);
+      if (dist > 6) return; // Ishte drag, jo klikim
+
+      const rect = renderer.domElement.getBoundingClientRect();
+      pointer.x = ((e.clientX - rect.left) / rect.width) * 2 - 1;
+      pointer.y = -((e.clientY - rect.top) / rect.height) * 2 + 1;
+
+      raycaster.setFromCamera(pointer, camera);
+      const hits = raycaster.intersectObjects(stageContainer.children, true);
+      if (!hits.length) return;
+
+      const hit = hits[0].object;
+      const ud = hit.userData || {};
+      const partInfo = PART_INFO_SQ[ud.partType] || ELEMENT_INFO_SQ[ud.element];
+      if (!partInfo) return;
+
+      inspTitle.textContent = ud.label || partInfo.name;
+      inspDesc.textContent = partInfo.role;
+
+      const tags = [];
+      if (partInfo.formula) tags.push(partInfo.formula);
+      if (ud.element) tags.push(`Atom: ${ud.element}`);
+      if (ud.strand) tags.push(`Zinxhiri ${ud.strand}`);
+      if (ud.bpIndex !== null && ud.bpIndex !== undefined) tags.push(`Çifti #${ud.bpIndex + 1}`);
+
+      inspTags.innerHTML = tags.map((t) => `<span class="formula-pill">${t}</span>`).join('');
+      inspectorCard.classList.add('visible');
+    });
+
+    // =========================================================================
+    // 7. ANIMACIONI & RESIZE
+    // =========================================================================
+    window.addEventListener('resize', () => {
+      camera.aspect = window.innerWidth / window.innerHeight;
+      camera.updateProjectionMatrix();
+      renderer.setSize(window.innerWidth, window.innerHeight);
+    });
+
+    function animate() {
+      requestAnimationFrame(animate);
+
+      if (camAnim) {
+        camAnim.t = Math.min(1, camAnim.t + 0.045);
+        const ease = 1 - Math.pow(1 - camAnim.t, 3);
+        camera.position.lerpVectors(camAnim.startPos, camAnim.endPos, ease);
+        controls.target.lerpVectors(camAnim.startTarget, camAnim.endTarget, ease);
+        if (camAnim.t >= 1) camAnim = null;
+      }
+
+      if (state.autoRotate && state.currentRoot) {
+        state.currentRoot.rotation.y += 0.0045;
+      }
+
+      controls.update();
+      renderer.render(scene, camera);
+    }
+
+    // Nisja fillestare
+    renderLegend();
+    selectStage(7, false);
+    animate();
+  </script>
+</body>
+</html>
